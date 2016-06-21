@@ -911,6 +911,8 @@ LUA_API int lua_gc (lua_State *L, int what, int data) {
       break;
     }
     case LUA_GCCOLLECT: {
+      if (g->disablegc)
+	    break;
       luaC_fullgc(L);
       break;
     }
@@ -924,6 +926,11 @@ LUA_API int lua_gc (lua_State *L, int what, int data) {
       break;
     }
     case LUA_GCSTEP: {
+      if (g->disablegc)
+      {
+        res = 1;
+        break;
+      }
       lu_mem a = (cast(lu_mem, data) << 10);
       if (a <= g->totalbytes)
         g->GCthreshold = g->totalbytes - a;

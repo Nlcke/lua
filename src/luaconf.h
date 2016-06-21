@@ -178,7 +178,7 @@
 ** (versions 3.2 and later) mark them as "hidden" to optimize access
 ** when Lua is compiled as a shared library.
 */
-#if defined(luaall_c)
+#if defined(luaall_c) && 0
 #define LUAI_FUNC	static
 #define LUAI_DATA	/* empty */
 
@@ -207,7 +207,7 @@
 @* of a function in debug information.
 ** CHANGE it if you want a different size.
 */
-#define LUA_IDSIZE	60
+#define LUA_IDSIZE	256
 
 
 /*
@@ -665,6 +665,7 @@ union luai_Cast { double l_d; long l_l; };
 @* the file streams.
 ** CHANGE it if you have a way to implement it in your system.
 */
+/*
 #if defined(LUA_USE_POPEN)
 
 #define lua_popen(L,c,m)	((void)L, fflush(NULL), popen(c,m))
@@ -682,6 +683,13 @@ union luai_Cast { double l_d; long l_l; };
 #define lua_pclose(L,file)		((void)((void)L, file), 0)
 
 #endif
+*/
+
+#define lua_popen(L,c,m)	((void)((void)c, m),  \
+		luaL_error(L, LUA_QL("popen") " not supported"), (FILE*)0)
+#define lua_pclose(L,file)		((void)((void)L, file), 0)
+
+
 
 /*
 @@ LUA_DL_* define which dynamic-library system Lua should use.

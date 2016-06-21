@@ -19,6 +19,7 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
+#include <gpath.h>
 
 static int os_pushresult (lua_State *L, int i, const char *filename) {
   int en = errno;  /* calls to Lua API may change this value */
@@ -36,21 +37,26 @@ static int os_pushresult (lua_State *L, int i, const char *filename) {
 
 
 static int os_execute (lua_State *L) {
+  #if TARGET_OS_TV == 0
   lua_pushinteger(L, system(luaL_optstring(L, 1, NULL)));
+  #endif
   return 1;
 }
 
 
 static int os_remove (lua_State *L) {
   const char *filename = luaL_checkstring(L, 1);
-  return os_pushresult(L, remove(filename) == 0, filename);
+  return os_pushresult(L, remove(gpath_transform(filename)) == 0, filename);
 }
 
 
 static int os_rename (lua_State *L) {
+  char fromname2[1024], toname2[1024];
   const char *fromname = luaL_checkstring(L, 1);
   const char *toname = luaL_checkstring(L, 2);
-  return os_pushresult(L, rename(fromname, toname) == 0, fromname);
+  strcpy(fromname2, gpath_transform(fromname));
+  strcpy(toname2, gpath_transform(toname));
+  return os_pushresult(L, rename(fromname2, toname2) == 0, fromname);
 }
 
 

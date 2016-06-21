@@ -7,6 +7,8 @@
 
 #include <stddef.h>
 
+#include <stdio.h>
+
 #define lstate_c
 #define LUA_CORE
 
@@ -80,6 +82,10 @@ static void f_luaopen (lua_State *L, void *ud) {
   g->GCthreshold = 4*g->totalbytes;
 }
 
+static void default_printfunc(const char* str, int len, void* data)
+{
+  fputs(str, stdout);
+}
 
 static void preinit_state (lua_State *L, global_State *g) {
   G(L) = g;
@@ -125,6 +131,7 @@ lua_State *luaE_newthread (lua_State *L) {
   L1->hookmask = L->hookmask;
   L1->basehookcount = L->basehookcount;
   L1->hook = L->hook;
+
   resethookcount(L1);
   lua_assert(iswhite(obj2gco(L1)));
   return L1;
@@ -178,6 +185,9 @@ LUA_API lua_State *lua_newstate (lua_Alloc f, void *ud) {
   g->gcpause = LUAI_GCPAUSE;
   g->gcstepmul = LUAI_GCMUL;
   g->gcdept = 0;
+  g->disablegc = 0;
+  g->printfunc = default_printfunc;
+  g->printfuncdata = NULL;
   for (i=0; i<NUM_TAGS; i++) g->mt[i] = NULL;
   if (luaD_rawrunprotected(L, f_luaopen, NULL) != 0) {
     /* memory allocation error: free partial state */
@@ -212,3 +222,23 @@ LUA_API void lua_close (lua_State *L) {
   close_state(L);
 }
 
+LUA_API lua_PrintFunc lua_getprintfunc(lua_State* L)
+{
+  return G(L)->printfunc;
+}
+
+LUA_API void* lua_getprintfuncdata(lua_State* L)
+{
+  return G(L)->printfuncdata;
+}
+
+LUA_API void lua_setprintfunc(lua_State* L, lua_PrintFunc printfunc, void* data)
+{
+  G(L)->printfunc = printfunc;
+  G(L)->printfuncdata = data;
+}
+
+LUA_API int lua_isjit()
+{
+  return 0;
+}
